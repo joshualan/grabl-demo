@@ -1,0 +1,12 @@
+ADD FIELD "active" OF "Customer" AS logical
+  FORMAT "yes/no"
+  POSITION 20
+  INITIAL "yes"
+  ORDER 210
+  MAX-WIDTH 1
+
+.
+PSC
+cpstream=ISO8859-1
+.
+0000000129

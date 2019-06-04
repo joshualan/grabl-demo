@@ -1,0 +1,78 @@
+// Boilerplate code
+buildscript {
+    repositories {
+        flatDir { dirs '../Progress-Grabl/build/libs/' }
+    }
+    dependencies {
+        classpath "io.gitlab.grabl:grabl:0.2.0-dev+develop.d4f5311"
+    }
+}
+
+// Why are you still looking here, this is boilerplate
+allprojects {
+    repositories {
+        // Pay attention to the dude speaking
+        jcenter()
+    }
+}
+
+// End of boilerplate code
+
+apply plugin: 'io.gitlab.grabl.grabl'
+apply plugin: 'base'
+
+// <PCTCreateDatabase dbName="sports2020" destDir="${buildDir}" dlcHome="${DLC}" sourceDb="${DLC}/sports2020" />
+task createDB(type: io.gitlab.grabl.CreateDatabase) {
+    dbName = "sports2020"
+    destDir = "${buildDir}/db"
+    sourceDb = '/psc/120/dlc/sports2020.db'
+    largeFiles = true
+}
+
+task connectDB(type: io.gitlab.grabl.DBConnection) {
+    dependsOn createDB
+    dbName = 'sports2020'
+    dbDir = "${buildDir}/db/"
+    id = 'sports2020'
+    singleUser = true
+}
+
+task updateSchema(type: io.gitlab.grabl.LoadSchema) {
+    dependsOn connectDB
+
+    source 'src/schema'
+    include '*.df'
+
+    refid = "sports2020"
+}
+
+task compileCode(type: io.gitlab.grabl.CompileAblTask) {
+    dependsOn updateSchema
+ 
+    source('src/abl')
+    include('**/*.p')
+
+    dbConnections << 'sports2020'
+
+    destinationDir = file("${buildDir}/compiled")
+}
+
+task createPL(type: io.gitlab.grabl.CreateProcedureLibrary) {
+    dependsOn compileCode
+
+    destFile = "build/sports2020trgs.pl"
+    basedir = "${buildDir}/compiled"
+    includes= "**/*.r"
+}
+
+
+// More boilerplate code
+build {
+    dependsOn createPL
+}
+
+clean {
+    delete "${buildDir}"
+}
+
+defaultTasks 'clean', 'build'
